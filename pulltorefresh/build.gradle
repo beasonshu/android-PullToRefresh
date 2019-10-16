@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
-
+// 添加插件
+apply plugin: 'com.novoda.bintray-release'
 
 android {
     compileSdkVersion COMPILE_SDK_VERSION as int
@@ -17,7 +18,16 @@ android {
         }
     }
 }
-
+//添加
+publish {
+//    repoName = 'work'//bintray.com用户名
+    userOrg = 'beasonshu'//bintray.com用户名
+    groupId = 'tk.beason'//jcenter上的路径
+    artifactId = 'pullRefresh'//项目名称
+    publishVersion = "1.0.1"//版本号
+    desc = 'common'
+    website = 'https://github.com/beasonshu/AndroidCommon'
+}
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
     api 'androidx.appcompat:appcompat:1.1.0'
