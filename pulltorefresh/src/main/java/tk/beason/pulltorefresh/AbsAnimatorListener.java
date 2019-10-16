@@ -1,4 +1,4 @@
-package com.ishow.pulltorefresh;
+package tk.beason.pulltorefresh;
 
 import android.animation.Animator;
 import android.animation.ValueAnimator;

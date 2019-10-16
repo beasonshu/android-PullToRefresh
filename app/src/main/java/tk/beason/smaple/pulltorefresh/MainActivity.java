@@ -1,4 +1,4 @@
-package com.ishow.smaple.pulltorefresh;
+package tk.beason.smaple.pulltorefresh;
 
 import android.graphics.Color;
 import android.os.Build;
@@ -8,16 +8,15 @@ import android.view.Window;
 import android.view.WindowManager;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.ishow.pulltorefresh.IPullToRefreshHeader;
-import com.ishow.pulltorefresh.OnPullToRefreshListener;
-import com.ishow.pulltorefresh.PullToRefreshView;
-import com.ishow.pulltorefresh.headers.classic.ClassicHeader;
-import com.ishow.pulltorefresh.headers.google.GoogleStyleHeader;
-import com.ishow.pulltorefresh.recycleview.LoadMoreAdapter;
+import tk.beason.pulltorefresh.IPullToRefreshHeader;
+import tk.beason.pulltorefresh.OnPullToRefreshListener;
+import tk.beason.pulltorefresh.PullToRefreshView;
+import tk.beason.pulltorefresh.headers.google.GoogleStyleHeader;
+import tk.beason.pulltorefresh.recycleview.LoadMoreAdapter;
+
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.ishow.pulltorefresh.utils;
+package tk.beason.pulltorefresh.utils;
 
 import android.animation.ValueAnimator;
 import androidx.annotation.IntRange;
@@ -7,7 +7,7 @@ import androidx.core.view.ViewCompat;
 
 import android.view.View;
 
-import com.ishow.pulltorefresh.AbsAnimatorListener;
+import tk.beason.pulltorefresh.AbsAnimatorListener;
 import com.ishow.pulltorefresh.R;
 
 /**

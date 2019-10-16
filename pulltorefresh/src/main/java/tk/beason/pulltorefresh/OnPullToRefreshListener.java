@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package com.ishow.pulltorefresh;
-
-import android.view.View;
+package tk.beason.pulltorefresh;
 
 /**
  * 下拉或者上拉刷新

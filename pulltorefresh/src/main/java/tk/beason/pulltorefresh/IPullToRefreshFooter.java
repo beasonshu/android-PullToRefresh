@@ -1,8 +1,7 @@
-package com.ishow.pulltorefresh;
+package tk.beason.pulltorefresh;
 
 import androidx.annotation.IntDef;
 
-import android.view.View;
 import android.view.ViewGroup;
 
 import java.lang.annotation.Retention;

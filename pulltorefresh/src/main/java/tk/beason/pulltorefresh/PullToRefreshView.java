@@ -1,4 +1,4 @@
-package com.ishow.pulltorefresh;
+package tk.beason.pulltorefresh;
 
 import android.animation.Animator;
 import android.animation.ValueAnimator;
@@ -19,7 +19,9 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.ishow.pulltorefresh.utils.ViewHelper;
+import com.ishow.pulltorefresh.R;
+
+import tk.beason.pulltorefresh.utils.ViewHelper;
 
 /**
  * Created by Bright.Yu on 2017/3/20.

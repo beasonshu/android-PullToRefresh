@@ -1,4 +1,4 @@
-package com.ishow.pulltorefresh.recycleview;
+package tk.beason.pulltorefresh.recycleview;
 
 import android.content.Context;
 
@@ -15,7 +15,7 @@ import android.view.animation.RotateAnimation;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.ishow.pulltorefresh.IPullToRefreshFooter;
+import tk.beason.pulltorefresh.IPullToRefreshFooter;
 import com.ishow.pulltorefresh.R;
 
 

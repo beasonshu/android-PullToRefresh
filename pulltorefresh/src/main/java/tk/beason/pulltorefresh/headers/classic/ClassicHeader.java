@@ -1,4 +1,4 @@
-package com.ishow.pulltorefresh.headers.classic;
+package tk.beason.pulltorefresh.headers.classic;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -16,10 +16,10 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatTextView;
 import androidx.core.view.ViewCompat;
 
-import com.ishow.pulltorefresh.AbsAnimatorListener;
-import com.ishow.pulltorefresh.IPullToRefreshHeader;
+import tk.beason.pulltorefresh.AbsAnimatorListener;
+import tk.beason.pulltorefresh.IPullToRefreshHeader;
 import com.ishow.pulltorefresh.R;
-import com.ishow.pulltorefresh.utils.ViewHelper;
+import tk.beason.pulltorefresh.utils.ViewHelper;
 
 /**
  * Created by Bright.Yu on 2017/3/22.

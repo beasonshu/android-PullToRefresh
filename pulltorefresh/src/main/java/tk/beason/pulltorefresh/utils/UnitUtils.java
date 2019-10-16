@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.ishow.pulltorefresh.utils;
+package tk.beason.pulltorefresh.utils;
 
 
 import android.content.Context;

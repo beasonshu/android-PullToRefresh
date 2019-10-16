@@ -1,4 +1,4 @@
-package com.ishow.pulltorefresh;
+package tk.beason.pulltorefresh;
 
 public interface OnPullToRefreshStatusChangedListener {
     /**
