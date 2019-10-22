@@ -16,7 +16,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import tk.beason.pulltorefresh.IPullToRefreshFooter;
-import com.ishow.pulltorefresh.R;
+import tk.beason.pulltorefresh.R;
 
 
 public class LoadMoreAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements IPullToRefreshFooter {
