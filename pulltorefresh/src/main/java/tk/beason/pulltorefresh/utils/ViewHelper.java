@@ -1,14 +1,14 @@
 package tk.beason.pulltorefresh.utils;
 
 import android.animation.ValueAnimator;
+import android.view.View;
+
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.core.view.ViewCompat;
 
-import android.view.View;
-
 import tk.beason.pulltorefresh.AbsAnimatorListener;
-import com.ishow.pulltorefresh.R;
+import tk.beason.pulltorefresh.R;
 
 /**
  * Created by Bright.Yu on 2017/3/27.

@@ -18,7 +18,7 @@ import androidx.core.view.ViewCompat;
 
 import tk.beason.pulltorefresh.AbsAnimatorListener;
 import tk.beason.pulltorefresh.IPullToRefreshHeader;
-import com.ishow.pulltorefresh.R;
+import tk.beason.pulltorefresh.R;
 import tk.beason.pulltorefresh.utils.ViewHelper;
 
 /**
