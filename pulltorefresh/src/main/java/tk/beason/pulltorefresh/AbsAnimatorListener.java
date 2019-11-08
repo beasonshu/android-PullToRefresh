@@ -4,7 +4,7 @@ import android.animation.Animator;
 import android.animation.ValueAnimator;
 
 /**
- * Created by yuhaiyang on 2017/9/20.
+
  * 动画监听
  */
 

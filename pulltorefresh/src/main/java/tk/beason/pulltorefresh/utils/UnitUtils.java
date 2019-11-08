@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The yuhaiyang Android Source Project
+ *
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,9 @@ import android.content.Context;
 import android.content.res.Resources;
 
 /**
- * Created by yuhaiyang on 2017/5/25.
+
  * 单位转换 工具类
  *
- * @author yuhaiyang
  */
 @SuppressWarnings("unused")
 public class UnitUtils {

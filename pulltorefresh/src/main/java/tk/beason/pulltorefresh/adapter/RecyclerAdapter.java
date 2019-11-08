@@ -1,12 +1,12 @@
 /*
  *
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,23 +14,26 @@
  * limitations under the License.
  */
 
-package tk.beason.smaple.pulltorefresh;
+package tk.beason.pulltorefresh.adapter;
 
 import android.content.Context;
-import androidx.recyclerview.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import tk.beason.pulltorefresh.R;
+
+
 /**
- *
+ * 封装后的RecycleAdapter
  */
 public abstract class RecyclerAdapter<DATA, HOLDER extends RecyclerAdapter.Holder> extends RecyclerView.Adapter<HOLDER> {
-    private static final String TAG = "RecyclerAdapter";
     /**
      * 类型 是头部
      */
@@ -47,19 +50,17 @@ public abstract class RecyclerAdapter<DATA, HOLDER extends RecyclerAdapter.Holde
     @SuppressWarnings("unused")
     public static final int TYPE_FOOTER = 2;
 
-
     private List<DATA> mData = new ArrayList<>();
     protected Context mContext;
     protected LayoutInflater mLayoutInflater;
-
+    private OnItemClickListener mOnItemClickListener;
+    protected boolean disableOnItemClickListener = false;
     /**
-     * 可能会参数
+     * 当前绑定的RecycleView
+     * {@link #onAttachedToRecyclerView(RecyclerView)} 中进行赋值操作
+     * {@link #onDetachedFromRecyclerView(RecyclerView)} 会进行值空
      */
-    private Object mParam;
-    /**
-     * 请求地址
-     */
-    private String mUrl;
+    private RecyclerView mRecyclerView;
 
     public RecyclerAdapter(Context context) {
         mContext = context;
@@ -79,36 +80,33 @@ public abstract class RecyclerAdapter<DATA, HOLDER extends RecyclerAdapter.Holde
      */
     public void setData(List<DATA> data, boolean force) {
         if (data != null) {
+            boolean canAni = mData.isEmpty();
             mData = data;
             notifyDataSetChanged();
+            if (canAni) animation();
         } else if (force) {
+            final int size = mData.size();
             mData.clear();
-            notifyDataSetChanged();
+            notifyItemRangeRemoved(0, size);
         }
     }
 
     /**
-     * 只添加一组数据
+     * 是否为空
      */
-    @SuppressWarnings("unused")
-    public void setOnlyOneData(DATA data) {
-        if (data != null) {
-            mData.clear();
-            mData.add(data);
-            notifyDataSetChanged();
-        } else {
-            Log.i(TAG, "setOnlyOneData data is null");
-        }
+    public boolean isEmpty() {
+        return mData == null || mData.isEmpty();
     }
 
     /**
      * 增加数据
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void plusData(List<DATA> data) {
         if (data != null) {
+            int lastIndex = mData.size();
             mData.addAll(data);
-            notifyDataSetChanged();
+            notifyItemRangeInserted(lastIndex, data.size());
         }
     }
 
@@ -136,7 +134,7 @@ public abstract class RecyclerAdapter<DATA, HOLDER extends RecyclerAdapter.Holde
     /**
      * 获取移除Header的Count
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public int getRealCount() {
         return mData.size();
     }
@@ -167,34 +165,6 @@ public abstract class RecyclerAdapter<DATA, HOLDER extends RecyclerAdapter.Holde
     }
 
     /**
-     * 获取请求参数
-     */
-    public Object getParam() {
-        return mParam;
-    }
-
-    /**
-     * 设定请求参数
-     */
-    public void setParam(Object param) {
-        mParam = param;
-    }
-
-    /**
-     * 获取请求的地址
-     */
-    public String getUrl() {
-        return mUrl;
-    }
-
-    /**
-     * 请求的地址
-     */
-    public void setUrl(String url) {
-        mUrl = url;
-    }
-
-    /**
      * 获取头部数量
      */
     @SuppressWarnings("WeakerAccess")
@@ -210,14 +180,40 @@ public abstract class RecyclerAdapter<DATA, HOLDER extends RecyclerAdapter.Holde
         return 0;
     }
 
+    @NonNull
     @Override
-    public abstract HOLDER onCreateViewHolder(ViewGroup parent, int type);
+    public abstract HOLDER onCreateViewHolder(@NonNull ViewGroup parent, int type);
 
     public abstract void onBindViewHolder(HOLDER holder, int position, int type);
 
     @Override
-    public void onBindViewHolder(HOLDER holder, int position) {
+    public void onBindViewHolder(@NonNull HOLDER holder, int position) {
+        holder.getItemView().setTag(R.id.tag_view_holder_recycle_item_click, position);
+        if(!disableOnItemClickListener) {
+            holder.getItemView().setOnClickListener(new ItemViewClickListener());
+        }
         onBindViewHolder(holder, position, holder.getItemViewType());
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        mRecyclerView = recyclerView;
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView);
+        mRecyclerView = null;
+    }
+
+    /**
+     * 执行动画
+     */
+    private void animation() {
+        if (mRecyclerView != null) {
+            mRecyclerView.scheduleLayoutAnimation();
+        }
     }
 
     public static abstract class Holder extends RecyclerView.ViewHolder {
@@ -237,6 +233,25 @@ public abstract class RecyclerAdapter<DATA, HOLDER extends RecyclerAdapter.Holde
 
         public View getItemView() {
             return mItemView;
+        }
+    }
+
+
+    public interface OnItemClickListener {
+        void onItemClick(int position);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        mOnItemClickListener = listener;
+    }
+
+    private class ItemViewClickListener implements View.OnClickListener {
+
+        @Override
+        public void onClick(View v) {
+            if (mOnItemClickListener != null) {
+                mOnItemClickListener.onItemClick((Integer) v.getTag(R.id.tag_view_holder_recycle_item_click));
+            }
         }
     }
 }

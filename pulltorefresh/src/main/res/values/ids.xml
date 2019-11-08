@@ -3,4 +3,6 @@
     <item name="tag_pull2refresh_moving_y" type="id" />
     <item name="tag_pull2refresh_animation" type="id" />
     <item name="pull2refresh_scroll_view" type="id" />
+    <!-- Recycle 的onClick中使用-->
+    <item name="tag_view_holder_recycle_item_click" type="id" />
 </resources>
