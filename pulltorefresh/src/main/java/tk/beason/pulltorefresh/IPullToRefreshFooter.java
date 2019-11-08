@@ -7,10 +7,6 @@ import android.view.ViewGroup;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-/**
- * Created by Bright.Yu on 2017/3/20.
- * PullToRefreshFooter
- */
 
 public interface IPullToRefreshFooter {
     /**

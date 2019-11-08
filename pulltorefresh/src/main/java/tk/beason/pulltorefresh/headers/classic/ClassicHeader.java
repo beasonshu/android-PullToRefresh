@@ -21,10 +21,7 @@ import tk.beason.pulltorefresh.IPullToRefreshHeader;
 import tk.beason.pulltorefresh.R;
 import tk.beason.pulltorefresh.utils.ViewHelper;
 
-/**
- * Created by Bright.Yu on 2017/3/22.
- * 经典下拉刷新
- */
+
 
 public class ClassicHeader extends LinearLayout implements IPullToRefreshHeader {
     private static final int ROTATE_ANIM_DURATION = 380;

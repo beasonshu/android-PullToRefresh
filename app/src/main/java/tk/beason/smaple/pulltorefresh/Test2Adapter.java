@@ -5,9 +5,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-/**
- * Created by Bright.Yu on 2017/3/23.
- */
+
 
 class Test2Adapter extends RecyclerAdapter<String, Test2Adapter.ViewHolder> {
 

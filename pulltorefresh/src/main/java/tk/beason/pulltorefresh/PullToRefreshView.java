@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,12 +23,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import tk.beason.pulltorefresh.utils.ViewHelper;
 
-/**
- * Created by Bright.Yu on 2017/3/20.
- * PullToRefresh
- */
+
 public class PullToRefreshView extends ViewGroup {
     private static final String TAG = "PullToRefreshView";
+    private int mSystemWindowInsetTop;
     /**
      * 设置了时间的时候进行配置一个时间间隔
      */
@@ -80,6 +79,14 @@ public class PullToRefreshView extends ViewGroup {
     private PullToRefreshAnimatorListener mRefreshingListener;
     private PullToRefreshAnimatorListener mRefreshingHeaderListener;
     private PullToRefreshAnimatorListener mSetRefreshNormalListener;
+    private androidx.core.view.OnApplyWindowInsetsListener mApplyWindowInsetsListener = new  androidx.core.view.OnApplyWindowInsetsListener() {
+
+        @Override
+        public WindowInsetsCompat onApplyWindowInsets(View view, WindowInsetsCompat windowInsetsCompat) {
+            mSystemWindowInsetTop = windowInsetsCompat.getSystemWindowInsetTop();
+            return ViewCompat.onApplyWindowInsets(view, windowInsetsCompat);
+        }
+    };
 
     public PullToRefreshView(Context context) {
         this(context, null);
@@ -109,6 +116,7 @@ public class PullToRefreshView extends ViewGroup {
         mRefreshingListener = new PullToRefreshAnimatorListener(PullToRefreshAnimatorListener.TYPE_REFRESHING);
         mRefreshingHeaderListener = new PullToRefreshAnimatorListener(PullToRefreshAnimatorListener.TYPE_HEADER_REFRESHING);
         mSetRefreshNormalListener = new PullToRefreshAnimatorListener(PullToRefreshAnimatorListener.TYPE_REFRESH_NORMAL);
+        ViewCompat.setOnApplyWindowInsetsListener(this, mApplyWindowInsetsListener);
     }
 
     @Override
@@ -200,6 +208,27 @@ public class PullToRefreshView extends ViewGroup {
         }
 
         return mIsBeingDragged;
+    }
+
+
+    /**
+     * 是否已经出FitSystemWindows 的距离
+     */
+    public void notifyMovingFitSystemWindows(final int movingDistance) {
+        if (mPullToRefreshStatusChangedListener != null) {
+            mPullToRefreshStatusChangedListener.onMovingFitTop(mHeader, movingDistance, getHeaderSystemWindowInsetTop());
+        }
+    }
+
+    /**
+     * 获取顶部下拉刷新的FitTop
+     */
+    private int getHeaderSystemWindowInsetTop() {
+        if (ViewCompat.getFitsSystemWindows(this) || ViewCompat.getFitsSystemWindows(mTargetView)) {
+            return mSystemWindowInsetTop;
+        } else {
+            return 0;
+        }
     }
 
     @Override
@@ -534,6 +563,7 @@ public class PullToRefreshView extends ViewGroup {
     private void computeStatus() {
         if (mHeader != null) {
             mHeaderMovingDistance = mHeader.getMovingDistance();
+            notifyMovingFitSystemWindows(mHeaderMovingDistance);
         }
 
         if (mTargetView != null) {
@@ -631,6 +661,7 @@ public class PullToRefreshView extends ViewGroup {
 
         private void setRefreshNormal() {
             // 通知状态改变要在setStatus之前
+            notifyMovingFitSystemWindows(mHeader.getMovingDistance());
             notifyRefreshStatusChanged(IPullToRefreshHeader.STATUS_NORMAL);
 
             if (mHeader != null) {

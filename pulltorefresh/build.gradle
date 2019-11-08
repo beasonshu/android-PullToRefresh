@@ -24,7 +24,7 @@ publish {
     userOrg = 'beasonshu'//bintray.com用户名
     groupId = 'tk.beason'//jcenter上的路径
     artifactId = 'pullRefresh'//项目名称
-    publishVersion = "1.0.3"//版本号
+    publishVersion = "1.0.4"//版本号
     desc = 'pullRefresh'
     website = 'https://github.com/beasonshu/android-PullToRefresh'
 }

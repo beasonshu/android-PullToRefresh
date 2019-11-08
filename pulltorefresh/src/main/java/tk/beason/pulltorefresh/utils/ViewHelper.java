@@ -10,10 +10,6 @@ import androidx.core.view.ViewCompat;
 import tk.beason.pulltorefresh.AbsAnimatorListener;
 import tk.beason.pulltorefresh.R;
 
-/**
- * Created by Bright.Yu on 2017/3/27.
- * View Helper
- */
 
 public class ViewHelper {
     /**

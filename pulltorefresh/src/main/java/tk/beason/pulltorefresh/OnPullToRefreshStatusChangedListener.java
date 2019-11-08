@@ -10,4 +10,6 @@ public interface OnPullToRefreshStatusChangedListener {
      * 上拉加载更多的装改变
      */
     void onLoadMoreStatusChanged(int status);
+
+    void onMovingFitTop(IPullToRefreshHeader header, int headerDistance, int fit);
 }
