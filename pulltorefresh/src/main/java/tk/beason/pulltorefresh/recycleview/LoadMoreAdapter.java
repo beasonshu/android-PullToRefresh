@@ -191,11 +191,26 @@ public class LoadMoreAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     @Override
+    public int loadSuccess(ViewGroup parent) {
+        return 0;
+    }
+
+    @Override
+    public int loadFailed(ViewGroup parent) {
+        return 0;
+    }
+
+    @Override
     public void setEnabled(boolean enable) {
         isEnabled = enable;
         if (mLoadMoreView != null) {
             mLoadMoreView.setVisibility(enable ? View.VISIBLE : View.GONE);
         }
+    }
+
+    @Override
+    public void setOnClickFooterListener(View.OnClickListener listener) {
+
     }
 
     private void setFooterStatus(int status) {

@@ -88,35 +88,17 @@ public class GoogleStyleHeader extends LinearLayout implements IPullToRefreshHea
     }
 
     @Override
-    public int moving(ViewGroup parent, int offset) {
-        final float moving = getBottom();
-        final int height = getMeasuredHeight();
-        float originalDragPercent = Math.max(moving - height, 0) / (mMaxPullDownHeight - height);
-
-        float dragPercent = Math.min(1f, Math.abs(originalDragPercent));
-        float strokeStart = dragPercent * .8f;
-        mProgress.setArrowEnabled(true);
-        mProgress.setStartEndTrim(0f, Math.min(MAX_PROGRESS_ANGLE, strokeStart));
-        mProgress.setArrowScale(Math.min(1f, dragPercent));
-
-        if (Math.abs(moving) >= getMaxPullDownHeight() && offset < 0) {
-            return 0;
-        } else if (getTop() - offset < -getHeaderHeight()) {
-            int adjust = getHeaderHeight() + getTop();
-            ViewCompat.offsetTopAndBottom(this, -adjust);
-        } else {
-            ViewCompat.offsetTopAndBottom(this, -offset);
-        }
+    public int moving(ViewGroup parent, int offset, int fitTop) {
         return 0;
     }
 
     @Override
-    public int refreshing(ViewGroup parent, @Nullable AbsAnimatorListener listener) {
-        int offset = -getTop();
-        ViewHelper.movingY(this, offset, listener);
-        mProgress.start();
+    public int refreshing(ViewGroup parent, int fitTop, @Nullable AbsAnimatorListener listener) {
         return 0;
     }
+
+
+
 
     @Override
     public int cancelRefresh(ViewGroup parent) {
@@ -126,18 +108,17 @@ public class GoogleStyleHeader extends LinearLayout implements IPullToRefreshHea
     }
 
     @Override
-    public int refreshSuccess(ViewGroup parent) {
-        int offset = -getHeaderHeight();
-        ViewHelper.movingY(this, offset);
+    public int refreshSuccess(ViewGroup parent, int fitTop) {
         return 0;
     }
 
     @Override
-    public int refreshFailed(ViewGroup parent) {
-        int offset = -getHeaderHeight();
-        ViewHelper.movingY(this, offset);
+    public int refreshFailed(ViewGroup parent, int fitTop) {
         return 0;
     }
+
+
+
 
     @Override
     public int getMaxPullDownHeight() {
@@ -150,9 +131,10 @@ public class GoogleStyleHeader extends LinearLayout implements IPullToRefreshHea
     }
 
     @Override
-    public boolean isEffectiveDistance() {
-        return Math.abs(getBottom()) > getHeaderHeight();
+    public boolean isEffectiveDistance(int fitTop) {
+        return false;
     }
+
 
     /**
      * 设置颜色样式

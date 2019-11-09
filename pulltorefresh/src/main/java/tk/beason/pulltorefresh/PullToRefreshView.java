@@ -24,9 +24,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import tk.beason.pulltorefresh.utils.ViewHelper;
 
 
-public class PullToRefreshView extends ViewGroup {
+public class PullToRefreshView extends ViewGroup implements View.OnClickListener {
     private static final String TAG = "PullToRefreshView";
-    private int mSystemWindowInsetTop;
     /**
      * 设置了时间的时候进行配置一个时间间隔
      */
@@ -72,21 +71,15 @@ public class PullToRefreshView extends ViewGroup {
     private int mTargetOffsetTop;
     private int mScrollViewId;
     /**
-     * RecyclerView默认的Footer或者HeaderCount
+     * 当设置 fitsSystemWindows 时候需要配置一下
      */
+    private int mSystemWindowInsetTop;
     private int mCustomFooterOrHeaderCount;
 
     private PullToRefreshAnimatorListener mRefreshingListener;
     private PullToRefreshAnimatorListener mRefreshingHeaderListener;
+    private PullToRefreshAnimatorListener mSetLoadNormalListener;
     private PullToRefreshAnimatorListener mSetRefreshNormalListener;
-    private androidx.core.view.OnApplyWindowInsetsListener mApplyWindowInsetsListener = new  androidx.core.view.OnApplyWindowInsetsListener() {
-
-        @Override
-        public WindowInsetsCompat onApplyWindowInsets(View view, WindowInsetsCompat windowInsetsCompat) {
-            mSystemWindowInsetTop = windowInsetsCompat.getSystemWindowInsetTop();
-            return ViewCompat.onApplyWindowInsets(view, windowInsetsCompat);
-        }
-    };
 
     public PullToRefreshView(Context context) {
         this(context, null);
@@ -115,7 +108,9 @@ public class PullToRefreshView extends ViewGroup {
 
         mRefreshingListener = new PullToRefreshAnimatorListener(PullToRefreshAnimatorListener.TYPE_REFRESHING);
         mRefreshingHeaderListener = new PullToRefreshAnimatorListener(PullToRefreshAnimatorListener.TYPE_HEADER_REFRESHING);
+        mSetLoadNormalListener = new PullToRefreshAnimatorListener(PullToRefreshAnimatorListener.TYPE_LOAD_NORMAL);
         mSetRefreshNormalListener = new PullToRefreshAnimatorListener(PullToRefreshAnimatorListener.TYPE_REFRESH_NORMAL);
+
         ViewCompat.setOnApplyWindowInsetsListener(this, mApplyWindowInsetsListener);
     }
 
@@ -153,11 +148,11 @@ public class PullToRefreshView extends ViewGroup {
         final int width = getMeasuredWidth();
         final int height = getMeasuredHeight();
 
+
         if (mHeader != null) {
             View view = mHeader.getView();
             measureChild(view, widthMeasureSpec, heightMeasureSpec);
         }
-
         if (mTargetView != null) {
             int widthM = MeasureSpec.makeMeasureSpec(width - getPaddingLeft() - getPaddingRight(), MeasureSpec.EXACTLY);
             int heightM = MeasureSpec.makeMeasureSpec(height - getPaddingTop() - getPaddingBottom(), MeasureSpec.EXACTLY);
@@ -188,7 +183,13 @@ public class PullToRefreshView extends ViewGroup {
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         // 只有当Header和Footer 都ok的时候才能进行 下拉或者上拉
-        if (!isAlreadyStatus() || canScrollUp()) {
+        if (!isAlreadyStatus()) {
+            return false;
+        }
+
+        final boolean canRefresh = canRefresh();
+
+        if (!isEnabled() || !canRefresh) {
             return false;
         }
 
@@ -210,34 +211,17 @@ public class PullToRefreshView extends ViewGroup {
         return mIsBeingDragged;
     }
 
-
-    /**
-     * 是否已经出FitSystemWindows 的距离
-     */
-    public void notifyMovingFitSystemWindows(final int movingDistance) {
-        if (mPullToRefreshStatusChangedListener != null) {
-            mPullToRefreshStatusChangedListener.onMovingFitTop(mHeader, movingDistance, getHeaderSystemWindowInsetTop());
-        }
-    }
-
-    /**
-     * 获取顶部下拉刷新的FitTop
-     */
-    private int getHeaderSystemWindowInsetTop() {
-        if (ViewCompat.getFitsSystemWindows(this) || ViewCompat.getFitsSystemWindows(mTargetView)) {
-            return mSystemWindowInsetTop;
-        } else {
-            return 0;
-        }
-    }
-
     @Override
     @SuppressLint("ClickableViewAccessibility")
     public boolean onTouchEvent(MotionEvent event) {
-        if (!isAlreadyStatus() || canScrollUp()) {
+        if (!isAlreadyStatus()) {
             return false;
         }
 
+        final boolean canRefresh = canRefresh();
+        if (!isEnabled() || !canRefresh) {
+            return false;
+        }
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 mIsBeingDragged = false;
@@ -262,7 +246,6 @@ public class PullToRefreshView extends ViewGroup {
     }
 
 
-    @SuppressWarnings("unused")
     public boolean isLoadMoreEnable() {
         return isLoadMoreEnable;
     }
@@ -279,7 +262,6 @@ public class PullToRefreshView extends ViewGroup {
         if (mFooter != null) mFooter.setEnabled(loadMoreEnable);
     }
 
-    @SuppressWarnings("unused")
     public boolean isRefreshEnable() {
         return isRefreshEnable;
     }
@@ -308,18 +290,25 @@ public class PullToRefreshView extends ViewGroup {
         if (mHeader == null) {
             return;
         }
-
-        final int offsetResult = mHeader.moving(this, offset);
+        /*
+         * 这里Header 不进行减掉 getSystemWindowInsetTop 目的保证
+         * 在normal状态下不进行展示header，这个样子 header和target
+         * 中间其实多了一个状态栏的距离
+         */
+        final int headerFitTop = getHeaderSystemWindowInsetTop();
+        final int offsetResult = mHeader.moving(this, offset, headerFitTop);
         mHeaderMovingDistance = mHeader.getMovingDistance();
 
         ViewCompat.offsetTopAndBottom(mTargetView, offsetResult);
-        mTargetOffsetTop = mTargetView.getTop();
+        mTargetOffsetTop = mTargetView.getTop() - getSystemWindowInsetTop();
 
-        if (mHeader.isEffectiveDistance()) {
+        if (mHeader.isEffectiveDistance(headerFitTop)) {
             notifyRefreshStatusChanged(IPullToRefreshHeader.STATUS_READY);
         } else {
             notifyRefreshStatusChanged(IPullToRefreshHeader.STATUS_NORMAL);
         }
+
+        notifyMovingFitSystemWindows(mHeader.getMovingDistance());
     }
 
     private synchronized void updateHeaderWhenUpOrCancel() {
@@ -328,9 +317,9 @@ public class PullToRefreshView extends ViewGroup {
             return;
         }
 
-        if (mHeader.isEffectiveDistance()) {
+        if (mHeader.isEffectiveDistance(getHeaderSystemWindowInsetTop())) {
             notifyRefreshStatusChanged(IPullToRefreshHeader.STATUS_REFRESHING);
-            int offset = mHeader.refreshing(this, mRefreshingHeaderListener);
+            int offset = mHeader.refreshing(this, getHeaderSystemWindowInsetTop(), mRefreshingHeaderListener);
             mHeaderMovingDistance = mHeader.getMovingDistance();
             ViewHelper.movingY(mTargetView, offset, mRefreshingListener);
         } else {
@@ -355,6 +344,14 @@ public class PullToRefreshView extends ViewGroup {
             mLastY = y;
             mIsBeingDragged = true;
         }
+    }
+
+
+    /**
+     * 是否可以进行刷新操作
+     */
+    private boolean canRefresh() {
+        return isRefreshEnable && mHeader != null && !canScrollUp();
     }
 
     /**
@@ -404,7 +401,7 @@ public class PullToRefreshView extends ViewGroup {
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                int offset = mHeader.refreshSuccess(PullToRefreshView.this);
+                int offset = mHeader.refreshSuccess(PullToRefreshView.this, getHeaderSystemWindowInsetTop());
                 ViewHelper.movingY(mTargetView, offset, mSetRefreshNormalListener);
             }
         }, ANI_INTERVAL);
@@ -424,15 +421,25 @@ public class PullToRefreshView extends ViewGroup {
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                int offset = mHeader.refreshFailed(PullToRefreshView.this);
+                int offset = mHeader.refreshFailed(PullToRefreshView.this, getHeaderSystemWindowInsetTop());
                 ViewHelper.movingY(mTargetView, offset, mSetRefreshNormalListener);
             }
         }, ANI_INTERVAL);
     }
 
     /**
+     * 加载完成
+     */
+    @SuppressWarnings("unused")
+    public void setLoadMoreNormal() {
+        notifyLoadMoreStatusChanged(IPullToRefreshFooter.STATUS_NORMAL);
+    }
+
+
+    /**
      * 下拉加载失败
      */
+    @SuppressWarnings("unused")
     public void setLoadMoreFailed() {
         if (mFooter == null) {
             Log.i(TAG, "setLoadMoreFailed: mFooter is null");
@@ -444,12 +451,19 @@ public class PullToRefreshView extends ViewGroup {
         }
         // 通知状态改变要在setStatus之前
         notifyLoadMoreStatusChanged(IPullToRefreshFooter.STATUS_FAILED);
-        requestLayout();
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                int offset = mFooter.loadFailed(PullToRefreshView.this);
+                ViewHelper.movingY(mTargetView, offset, mSetLoadNormalListener);
+            }
+        }, ANI_INTERVAL);
     }
 
     /**
      * 下拉加载成功
      */
+    @SuppressWarnings("unused")
     public void setLoadMoreSuccess() {
         if (mFooter == null) {
             Log.i(TAG, "setLoadMoreSuccess: mFooter is null");
@@ -458,9 +472,14 @@ public class PullToRefreshView extends ViewGroup {
         if (mFooter.getStatus() != IPullToRefreshFooter.STATUS_LOADING) {
             return;
         }
-        // 通知状态改变要在setStatus之前
-        notifyLoadMoreStatusChanged(IPullToRefreshFooter.STATUS_NORMAL);
-        requestLayout();
+
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                int offset = mFooter.loadSuccess(PullToRefreshView.this);
+                ViewHelper.movingY(mTargetView, offset, mSetLoadNormalListener);
+            }
+        }, 50);
     }
 
     /**
@@ -471,7 +490,14 @@ public class PullToRefreshView extends ViewGroup {
         if (mTargetView == null) {
             return;
         }
+
+        Object object = mTargetView.getTag(R.id.tag_pull_to_refresh_animation);
+        if (object != null) {
+            ValueAnimator animator = (ValueAnimator) object;
+            animator.removeAllListeners();
+        }
         notifyLoadMoreStatusChanged(IPullToRefreshFooter.STATUS_END);
+
         requestLayout();
     }
 
@@ -481,94 +507,6 @@ public class PullToRefreshView extends ViewGroup {
     @SuppressWarnings("unused")
     public void setCustomFooterOrHeaderCount(int count) {
         mCustomFooterOrHeaderCount = count;
-    }
-
-    /**
-     * 状态已经可以进行下拉刷新
-     */
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    private boolean isAlreadyStatus() {
-        return isEnabled() && isHeaderAlreadyForRefresh() && isFooterAlreadyForRefresh();
-    }
-
-    private boolean isHeaderAlreadyForRefresh() {
-        if (!isRefreshEnable || mHeader == null) {
-            return false;
-        }
-        switch (mHeader.getStatus()) {
-            case IPullToRefreshHeader.STATUS_NORMAL:
-            case IPullToRefreshHeader.STATUS_READY:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    private boolean isFooterAlreadyForRefresh() {
-        // 当Footer不存在或者使用的时候那么也可以认为可以进行下拉刷新
-        if (!isLoadMoreEnable || mFooter == null) {
-            return true;
-        }
-        switch (mFooter.getStatus()) {
-            case IPullToRefreshFooter.STATUS_NORMAL:
-            case IPullToRefreshFooter.STATUS_END:
-            case IPullToRefreshFooter.STATUS_FAILED:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    private boolean isHeaderAlreadyForLoadMore() {
-        // 当Header不存在或者使用的时候那么也可以认为可以进行加载更多
-        if (!isRefreshEnable || mHeader == null) {
-            return true;
-        }
-        switch (mHeader.getStatus()) {
-            case IPullToRefreshHeader.STATUS_NORMAL:
-            case IPullToRefreshHeader.STATUS_READY:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * 是否可以加载更多
-     */
-    private boolean isCanLoadMore() {
-        if (!isLoadMoreEnable || mFooter == null) {
-            return false;
-        }
-
-        switch (mFooter.getStatus()) {
-            case IPullToRefreshFooter.STATUS_NORMAL:
-            case IPullToRefreshFooter.STATUS_FAILED:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    private void setRefreshing() {
-        computeStatus();
-        notifyRefresh();
-    }
-
-    private void setLoading() {
-        computeStatus();
-        notifyLoadMore();
-    }
-
-    private void computeStatus() {
-        if (mHeader != null) {
-            mHeaderMovingDistance = mHeader.getMovingDistance();
-            notifyMovingFitSystemWindows(mHeaderMovingDistance);
-        }
-
-        if (mTargetView != null) {
-            mTargetOffsetTop = mTargetView.getTop();
-        }
     }
 
     public void setOnPullToRefreshListener(OnPullToRefreshListener listener) {
@@ -623,20 +561,123 @@ public class PullToRefreshView extends ViewGroup {
         }
     }
 
+    /**
+     * 是否已经出FitSystemWindows 的距离
+     */
+    public void notifyMovingFitSystemWindows(final int movingDistance) {
+        if (mPullToRefreshStatusChangedListener != null) {
+            mPullToRefreshStatusChangedListener.onMovingFitTop(mHeader, movingDistance, getHeaderSystemWindowInsetTop());
+        }
+    }
+
+    /**
+     * 状态已经可以进行下拉刷新或者上拉加载更多
+     */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    private boolean isAlreadyStatus() {
+        return isEnabled() && isAlreadyHeaderStatus() && isAlreadyFooterStatus();
+    }
+
+    private boolean isAlreadyHeaderStatus() {
+        if (mHeader == null) {
+            return true;
+        }
+        final int status = mHeader.getStatus();
+        return status == IPullToRefreshHeader.STATUS_NORMAL || status == IPullToRefreshHeader.STATUS_READY;
+    }
+
+    private boolean isAlreadyFooterStatus() {
+        if (mFooter == null) {
+            return true;
+        }
+        final int status = mFooter.getStatus();
+        return status == IPullToRefreshFooter.STATUS_NORMAL || status == IPullToRefreshFooter.STATUS_READY || status == IPullToRefreshFooter.STATUS_END;
+    }
+
+    private boolean isCanLoadMore() {
+        return mFooter != null && mFooter.getStatus() == IPullToRefreshFooter.STATUS_NORMAL;
+    }
+
+    private void setRefreshing() {
+        computeStatus();
+        notifyRefresh();
+    }
+
+    private void setLoading() {
+        computeStatus();
+        notifyLoadMore();
+    }
+
+    private void computeStatus() {
+        if (mHeader != null) {
+            mHeaderMovingDistance = mHeader.getMovingDistance();
+            notifyMovingFitSystemWindows(mHeaderMovingDistance);
+        }
+
+        if (mTargetView != null) {
+            mTargetOffsetTop = mTargetView.getTop() - getSystemWindowInsetTop();
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (isCanLoadMore() && isAlreadyHeaderStatus()) {
+            setLoading();
+        }
+    }
+
+    /**
+     * 获取默认的FitTop
+     */
+    private int getSystemWindowInsetTop() {
+        if (ViewCompat.getFitsSystemWindows(this)) {
+            return mSystemWindowInsetTop;
+        } else {
+            return 0;
+        }
+    }
+
+    /**
+     * 获取顶部下拉刷新的FitTop
+     */
+    private int getHeaderSystemWindowInsetTop() {
+        if (ViewCompat.getFitsSystemWindows(this) || ViewCompat.getFitsSystemWindows(mTargetView)) {
+            return mSystemWindowInsetTop;
+        } else {
+            return 0;
+        }
+    }
+
+    private androidx.core.view.OnApplyWindowInsetsListener mApplyWindowInsetsListener = new androidx.core.view.OnApplyWindowInsetsListener() {
+
+        @Override
+        public WindowInsetsCompat onApplyWindowInsets(View view, WindowInsetsCompat windowInsetsCompat) {
+            mSystemWindowInsetTop = windowInsetsCompat.getSystemWindowInsetTop();
+            return ViewCompat.onApplyWindowInsets(view, windowInsetsCompat);
+        }
+    };
+
     private class PullToRefreshAnimatorListener extends AbsAnimatorListener {
+        /**
+         * 设置为加载默认
+         */
+        private static final int TYPE_LOAD_NORMAL = 1;
         /**
          * 设置为刷新默认状态
          */
-        private static final int TYPE_REFRESH_NORMAL = 1;
+        private static final int TYPE_REFRESH_NORMAL = 2;
         /**
          * 正在刷新
          */
-        private static final int TYPE_REFRESHING = 2;
+        private static final int TYPE_REFRESHING = 3;
         /**
          * 头部刷新
          */
-        private static final int TYPE_HEADER_REFRESHING = 3;
-
+        private static final int TYPE_HEADER_REFRESHING = 4;
+        /**
+         * 正在加载更多
+         */
+        private static final int TYPE_LOADING = 5;
 
         private int mType;
 
@@ -647,11 +688,17 @@ public class PullToRefreshView extends ViewGroup {
         @Override
         public void onAnimationEnd(Animator animation) {
             switch (mType) {
+                case TYPE_LOAD_NORMAL:
+                    setLoadNormal();
+                    break;
                 case TYPE_REFRESH_NORMAL:
                     setRefreshNormal();
                     break;
                 case TYPE_REFRESHING:
                     setRefreshing();
+                    break;
+                case TYPE_LOADING:
+                    setLoading();
                     break;
                 case TYPE_HEADER_REFRESHING:
                     computeStatus();
@@ -669,7 +716,22 @@ public class PullToRefreshView extends ViewGroup {
             }
 
             if (mTargetView != null) {
-                mTargetOffsetTop = mTargetView.getTop();
+                mTargetOffsetTop = mTargetView.getTop() - getSystemWindowInsetTop();
+            }
+        }
+
+        private void setLoadNormal() {
+            if (mHeader != null) {
+                notifyRefreshStatusChanged(IPullToRefreshHeader.STATUS_NORMAL);
+                mHeaderMovingDistance = mHeader.getMovingDistance();
+            }
+
+            if (mFooter != null && mFooter.getStatus() != IPullToRefreshFooter.STATUS_END) {
+                notifyLoadMoreStatusChanged(IPullToRefreshFooter.STATUS_NORMAL);
+            }
+
+            if (mTargetView != null) {
+                mTargetOffsetTop = mTargetView.getTop() - getSystemWindowInsetTop();
             }
         }
 
@@ -684,7 +746,7 @@ public class PullToRefreshView extends ViewGroup {
         @Override
         public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
             super.onScrollStateChanged(recyclerView, newState);
-            if (!isLoadMoreEnable || !isCanLoadMore() || !isHeaderAlreadyForLoadMore()) {
+            if (!isLoadMoreEnable || !isCanLoadMore() || !isAlreadyHeaderStatus()) {
                 return;
             }
 

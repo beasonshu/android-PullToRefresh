@@ -5,4 +5,5 @@
     <item name="pull2refresh_scroll_view" type="id" />
     <!-- Recycle 的onClick中使用-->
     <item name="tag_view_holder_recycle_item_click" type="id" />
+    <item name="tag_pull_to_refresh_animation" type="id" />
 </resources>

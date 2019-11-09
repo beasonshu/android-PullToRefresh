@@ -138,26 +138,15 @@ public class ClassicHeader extends LinearLayout implements IPullToRefreshHeader 
     }
 
     @Override
-    public int moving(ViewGroup parent, final int offset) {
-        if (Math.abs(getBottom()) >= getMaxPullDownHeight() && offset < 0) {
-            return 0;
-        } else if (getTop() - offset < -getHeaderHeight()) {
-            int adjust = getHeaderHeight() + getTop();
-            ViewCompat.offsetTopAndBottom(this, -adjust);
-            return -adjust;
-        } else {
-            ViewCompat.offsetTopAndBottom(this, -offset);
-            return -offset;
-        }
+    public int moving(ViewGroup parent, int offset, int fitTop) {
+        return 0;
     }
-
 
     @Override
-    public int refreshing(ViewGroup parent, @Nullable AbsAnimatorListener listener) {
-        int offset = -getTop();
-        ViewHelper.movingY(this, offset, listener);
-        return offset;
+    public int refreshing(ViewGroup parent, int fitTop, @Nullable AbsAnimatorListener listener) {
+        return 0;
     }
+
 
     @Override
     public int cancelRefresh(ViewGroup parent) {
@@ -167,18 +156,15 @@ public class ClassicHeader extends LinearLayout implements IPullToRefreshHeader 
     }
 
     @Override
-    public int refreshSuccess(ViewGroup parent) {
-        int offset = -getHeaderHeight();
-        ViewHelper.movingY(this, offset);
-        return offset;
+    public int refreshSuccess(ViewGroup parent, int fitTop) {
+        return 0;
     }
 
     @Override
-    public int refreshFailed(ViewGroup parent) {
-        int offset = -getHeaderHeight();
-        ViewHelper.movingY(this, offset);
-        return offset;
+    public int refreshFailed(ViewGroup parent, int fitTop) {
+        return 0;
     }
+
 
     @Override
     public int getMaxPullDownHeight() {
@@ -191,8 +177,8 @@ public class ClassicHeader extends LinearLayout implements IPullToRefreshHeader 
     }
 
     @Override
-    public boolean isEffectiveDistance() {
-        return Math.abs(getBottom()) > getHeaderHeight();
+    public boolean isEffectiveDistance(int fitTop) {
+        return false;
     }
 
 
