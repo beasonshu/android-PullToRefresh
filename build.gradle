@@ -1,28 +1,27 @@
 buildscript {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
+//        maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
+        maven { url 'https://jitpack.io' }
     }
 
     dependencies {
         //  Android 默认的编译工具库插件
-        classpath 'com.android.tools.build:gradle:3.5.2'
+        classpath 'com.android.tools.build:gradle:4.2.2'
         // 上传的插件
-        classpath 'com.novoda:bintray-release:0.9.1'
     }
 }
 
 allprojects {
     repositories {
-        jcenter()
         google()
+        mavenCentral()
+//        maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/'}
+        maven { url 'https://jitpack.io' }
     }
 
-    // Javadoc设定为UTF-8了
-    tasks.withType(Javadoc) {
-        options.addStringOption('Xdoclint:none', '-quiet')
-        options.addStringOption('encoding', 'UTF-8')
-    }
+
 }
 
 /**
